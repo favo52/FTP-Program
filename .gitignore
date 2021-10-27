@@ -1,7 +1,5 @@
 .vs/
 Debug/
-FTP-Client/Debug/
-FTP-Server/Debug/
 *.vcxproj
 *.filters
 *.user
