@@ -1,2 +1,2 @@
 # FTP-Program
-Network Engineering - Design Project
+Computer Networks - Design Project
