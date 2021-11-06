@@ -1,12 +1,8 @@
-#ifndef FTP_SERVER_H
-#define FTP_SERVER_H
+#pragma once
 
 #include <ws2tcpip.h>
-#include <iostream>
-#include <string>
-#include <sstream>
+
 #include <map>
-#include <thread>
 #include <filesystem>
 
 // Need to tell the compiler to link Ws2_32.lib
@@ -21,7 +17,7 @@ constexpr int TRANSFER_BYTE_SYZE{ 8 };
 constexpr int DEFAULT_BUFLEN{ 512 };
 
 // IP Address and Port constants
-constexpr const char* IP_ADDRESS{ "192.168.0.13" };
+constexpr const char* IP_ADDRESS{ "192.168.0.2" };
 constexpr const char* DATA_PORT{ "20" };
 constexpr const char* CONTROL_PORT{ "21" };
 
@@ -49,9 +45,9 @@ private: // Variables
 	
 	/*The WSADATA structure contains information
 	about the Windows Sockets implementation.*/
-	WSADATA wsaData;
-	int iResult;
-	int iSendResult;
+	WSADATA m_wsaData;
+	int m_iResult;
+	int m_iSendResult;
 
 	SOCKET ControlSocket;		// Temporary SOCKET for accepting connections from clients
 	SOCKET ControlListenSocket;	// SOCKET for Server to listen for Client control connections
@@ -94,7 +90,7 @@ private: // Functions
 	int EstablishDataConnection(); // TCP Connection
 
 	// FTP Commands
-	int retrFile(FILE* fd);
+	int retrFile(std::ifstream& ifs);
 	int storFile();
 
 	// Commands and input
@@ -127,5 +123,3 @@ constexpr const char* REPLY_500{ "500 Syntax error, command unrecognized." };
 constexpr const char* REPLY_501{ "501 Syntax error in parameters or arguments." };
 constexpr const char* REPLY_521{ "521 " }; // Directory already exists
 constexpr const char* REPLY_550{ "550 Requested action not taken. File not found." };
-
-#endif

@@ -2,6 +2,8 @@
 
 #include "FTP_Server.h"
 
+#include <iostream>
+
 int main(int argc, char** argv)
 try {
 	FTP_Server* server = new FTP_Server();

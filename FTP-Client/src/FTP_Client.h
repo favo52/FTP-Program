@@ -1,12 +1,9 @@
-#ifndef FTP_CLIENT_H
-#define FTP_CLIENT_H
+#pragma once
 
 #include <ws2tcpip.h>
-#include <iostream>
+
 #include <string>
-#include <sstream>
 #include <map>
-#include <filesystem>
 
 // Need to tell the compiler to link Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
@@ -20,7 +17,7 @@ constexpr int TRANSFER_BYTE_SYZE{ 8 };
 constexpr int DEFAULT_BUFLEN{ 512 };
 
 // IP Address and Port constants
-constexpr const char* IP_ADDRESS{ "192.168.0.13" };
+constexpr const char* IP_ADDRESS{ "192.168.0.2" };
 constexpr const char* DATA_PORT{ "20" };
 constexpr const char* CONTROL_PORT{ "21" };
 
@@ -100,5 +97,3 @@ public:
 // Reply codes
 constexpr int FILE_OKAY{ 150 };
 constexpr int COMMAND_OKAY{ 200 };
-
-#endif

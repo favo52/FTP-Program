@@ -1,6 +1,13 @@
 #include "FTP_Client.h"
 
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <filesystem>
+
+/***********************************************
 // Helper Functions
+***********************************************/
 
 // Empty the cin stream in case of bad input
 void clear_input()
@@ -216,16 +223,13 @@ int FTP_Client::ControlProcess()
 						std::cout << "SERVER: " << msgBuf;
 
 						// Receive file
-						if (retrFile() == SUCCESS) {
-							ZeroMemory(msgBuf, msgBufLen);
-							recv(ControlSocket, msgBuf, msgBufLen, 0);
-							std::cout << "SERVER: " << msgBuf << '\n';
-						}
-						else {
-							ZeroMemory(msgBuf, msgBufLen);
-							recv(ControlSocket, msgBuf, msgBufLen, 0);
-							std::cout << "SERVER: " << msgBuf << '\n';
-						}
+						retrFile();
+
+						// Recv sucess or no success
+						ZeroMemory(msgBuf, msgBufLen);
+						recv(ControlSocket, msgBuf, msgBufLen, 0);
+						std::cout << "SERVER: " << msgBuf << '\n';
+						
 						closesocket(DataTransferSocket);
 					}
 				}
@@ -495,25 +499,20 @@ int FTP_Client::retrFile()
 	std::cout << " (" << file_size << " bytes)\n";
 
 	// Create file in binary mode
-	FILE* fd{ NULL };
-	errno_t err = fopen_s(&fd, sArgument.c_str(), "wb");
+	std::ofstream ofs{ sArgument, std::ios_base::binary };
+	if (!ofs) std::cout << "CLIENT: Error opening file: " << sArgument << "\n";
 
 	// Receive file
-	// Loop while there's still bytes to receive
-	size_t remainingData{ 0 };
-	for (int i = file_size; i > 0; i -= remainingData) {
-		remainingData = recv(DataTransferSocket, xferBuf, xferBufLen, 0);
-		if (remainingData == SOCKET_ERROR) {
-			std::cerr << "WINSOCK: recv() failed with error: " << WSAGetLastError() << '\n';
-			return FAILURE;
-		}
-		if (!err && fd != NULL)
-			fwrite(xferBuf, sizeof(char), xferBufLen, fd); // write into binary file
+	while ((iResult = recv(DataTransferSocket, xferBuf, xferBufLen, 0)) > 0)
+		ofs.write(xferBuf, xferBufLen);
+
+	if (iResult == SOCKET_ERROR) {
+		std::cerr << "WINSOCK: recv() failed with error: " << WSAGetLastError() << '\n';
+		return FAILURE;
 	}
 
-	if (!err && fd != NULL)
-		fclose(fd);
-
+	ofs.close();
+	
 	return SUCCESS;
 }
 
