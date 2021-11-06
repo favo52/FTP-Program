@@ -25,8 +25,7 @@ constexpr const char* CONTROL_PORT{ "21" };
 constexpr WORD WINSOCK_VER{ MAKEWORD(2, 2) };
 
 enum class COMMAND {
-	RETR, STOR, HELP, QUIT, MKD, PWD, CWD, LIST,
-	INVALID
+	INVALID, RETR, STOR, HELP, QUIT, MKD, PWD, CWD, LIST
 };
 
 static std::map<std::string, COMMAND> stringToCommand{
@@ -46,8 +45,8 @@ private: // Variables
 	/*The WSADATA structure contains information
 	about the Windows Sockets implementation.*/
 	WSADATA wsaData;
-	int iResult;
-	int iSendResult;
+	int m_iResult;
+	int m_iSendResult;
 
 	SOCKET ControlSocket;		// SOCKET for connecting to Server
 	SOCKET DataListenSocket;	// SOCKET for Client to listen for Server data connections
@@ -81,7 +80,7 @@ private: // Functions
 
 	// FTP Commands
 	int retrFile();
-	int storFile(FILE* fd);
+	int storFile(std::ifstream& ifs);
 
 	// Commands and input
 	COMMAND getCommand(std::string& command);

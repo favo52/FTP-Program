@@ -22,6 +22,7 @@ FTP_Server::FTP_Server() :
 	sCommand{ "" },
 	sArgument{ "" }
 {
+
 }
 
 /***********************************************
@@ -186,8 +187,6 @@ int FTP_Server::ControlProcess(const SOCKET& hControlSocket)
 				
 				// Attempt to open file
 				std::ifstream ifs{ filename, std::ios_base::binary };
-				//FILE* fd{};
-				//fopen_s(&fd, filename.c_str(), "rb"); // "rb" mode means "read-only" in "binary-mode"
 				if (!ifs) {
 					// Reply with file not found
 					std::cout << "SERVER: " << REPLY_550 << '\n';
@@ -449,15 +448,17 @@ int FTP_Server::retrFile(std::ifstream& ifs)
 	ZeroMemory(xferBuf, xferBufLen);
 
 	// Get file size
-	int file_size = std::filesystem::file_size(sArgument);
+	long file_size = (long)std::filesystem::file_size(sArgument);
 	std::cout << " (" << file_size << " bytes)\n";
 
 	// Send file size
 	m_iSendResult = send(DataTransferSocket, reinterpret_cast<char*>(&file_size), sizeof(file_size), 0);
 	
-	// Send file	
-	while (ifs.read(xferBuf, xferBufLen)) // reading data
+	// Send file
+	// Loop while there's still data to send
+	for (int remainingData = file_size; remainingData > 0; remainingData -= m_iSendResult)
 	{
+		ifs.read(xferBuf, xferBufLen);
 		m_iSendResult = send(DataTransferSocket, xferBuf, xferBufLen, 0);
 		if (m_iSendResult == SOCKET_ERROR) {
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
@@ -478,30 +479,27 @@ int FTP_Server::storFile()
 	ZeroMemory(xferBuf, xferBufLen);
 
 	// Receive file size
-	int file_size{ 0 };
+	long file_size{ 0 };
 	m_iResult = recv(DataTransferSocket, reinterpret_cast<char*>(&file_size), sizeof(file_size), 0);
 	std::cout << " (" << file_size << " bytes)\n";
 
 	// Create file in binary mode
-	FILE* fd{ NULL };
-	errno_t err = fopen_s(&fd, sArgument.c_str(), "wb"); // write-only in binary-mode
+	std::ofstream ofs{ sArgument, std::ios_base::binary };
+	if (!ofs) std::cout << "SERVER: Error opening file: " << sArgument << "\n";
 
 	// Receive file
-	// Loop while there's still bytes to receive
-	size_t remainingData{ 0 };
-	for (int i = file_size; i > 0; i -= remainingData) {
-		remainingData = recv(DataTransferSocket, xferBuf, xferBufLen, 0);
-		if (remainingData == SOCKET_ERROR) {
+	// Loop while there's still data to receive
+	for (int remainingData = file_size; remainingData > 0; remainingData -= m_iResult)
+	{
+		m_iResult = recv(DataTransferSocket, xferBuf, xferBufLen, 0);
+		if (m_iResult == SOCKET_ERROR) {
 			std::cerr << "WINSOCK: recv() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
-		if (!err && fd != NULL) {
-			fwrite(xferBuf, sizeof(char), xferBufLen, fd); // write into file
-		}
+		ofs.write(xferBuf, xferBufLen);
 	}
 
-	if (!err && fd != NULL)
-		fclose(fd);
+	ofs.close();
 
 	return SUCCESS;
 }

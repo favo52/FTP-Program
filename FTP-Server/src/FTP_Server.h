@@ -25,8 +25,8 @@ constexpr const char* CONTROL_PORT{ "21" };
 constexpr WORD WINSOCK_VER{ MAKEWORD(2, 2) };
 
 enum class COMMAND {
-	RETR, STOR, HELP, QUIT, MKD, PWD, CWD, LIST,
-	INVALID
+	INVALID, RETR, STOR, HELP, QUIT, MKD, PWD, CWD, LIST
+	
 };
 
 static std::map<std::string, COMMAND> stringToCommand{
