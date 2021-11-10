@@ -5,7 +5,8 @@
 #include <iostream>
 
 int main(int argc, char** argv)
-try {
+try
+{
 	FTP_Client* client = new FTP_Client;
 
 	if (client->init() == SUCCESS)

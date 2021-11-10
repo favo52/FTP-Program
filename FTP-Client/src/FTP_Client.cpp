@@ -69,7 +69,8 @@ int FTP_Client::init()
 
 		// Receive welcome message
 		m_iResult = recv(ControlSocket, msgBuf, msgBufLen, 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: recv() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -84,13 +85,15 @@ int FTP_Client::init()
 
 void FTP_Client::run()
 {
-	while (true) try {
+	while (true) try
+	{
 		if (ControlProcess() == SUCCESS)
 			continue;
 		else
 			return;
 	}
-	catch (std::exception& e) {
+	catch (std::exception& e)
+	{
 		std::cerr << e.what() << '\n';
 		clear_input();
 	}
@@ -107,7 +110,8 @@ void FTP_Client::run()
 int FTP_Client::InitializeWinsock()
 {
 	m_iResult = WSAStartup(WINSOCK_VER, &wsaData);
-	if (m_iResult != SUCCESS) { // Ensure system supports Winsock
+	if (m_iResult != SUCCESS) // Ensure system supports Winsock
+	{
 		std::cerr << "WINSOCK: WSAStartup() failed with error: "
 				  << m_iResult << '\n';
 		return FAILURE;
@@ -127,7 +131,8 @@ int FTP_Client::EstablishControlConnection()
 
 	// Resolve the server address and port
 	m_iResult = getaddrinfo(IP_ADDRESS, CONTROL_PORT, &hints, &result);
-	if (m_iResult != SUCCESS) { // Error checking
+	if (m_iResult != SUCCESS) // Error checking
+	{
 		std::cerr << "WINSOCK: getaddrinfo() failed with error: " << m_iResult << '\n';
 		WSACleanup();
 		return FAILURE;
@@ -138,7 +143,8 @@ int FTP_Client::EstablishControlConnection()
 	{
 		// Create a SOCKET for connecting to server
 		ControlSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-		if (ControlSocket == INVALID_SOCKET) { // Ensure that the socket is a valid socket.
+		if (ControlSocket == INVALID_SOCKET) // Ensure that the socket is a valid socket.
+		{
 			std::cerr << "WINSOCK: socket() failed with error: " << WSAGetLastError() << '\n';
 			freeaddrinfo(result);
 			WSACleanup();
@@ -147,7 +153,8 @@ int FTP_Client::EstablishControlConnection()
 
 		// Connect to server.
 		m_iResult = connect(ControlSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (m_iResult == SOCKET_ERROR) { // Check for general errors.
+		if (m_iResult == SOCKET_ERROR) // Check for general errors.
+		{
 			closesocket(ControlSocket);
 			ControlSocket = INVALID_SOCKET;
 			continue;
@@ -158,7 +165,8 @@ int FTP_Client::EstablishControlConnection()
 	// Not needed anymore, free the memory
 	freeaddrinfo(result);
 
-	if (ControlSocket == INVALID_SOCKET) {
+	if (ControlSocket == INVALID_SOCKET)
+	{
 		std::cerr << "WINSOCK: Unable to connect to server!\n";
 		WSACleanup();
 		return FAILURE;
@@ -192,20 +200,25 @@ int FTP_Client::ControlProcess()
 	iss >> sArgument;
 
 	COMMAND command = getCommand(sCommand);
-	switch (command) {
-	case COMMAND::RETR: {
+	switch (command)
+	{
+	case COMMAND::RETR:
+	{
 		// Open data transfer listening socket
-		if (EstablishDataConnection() == SUCCESS) {
+		if (EstablishDataConnection() == SUCCESS)
+		{
 			// Send RETR message
 			m_iResult = send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-			if (m_iResult == SOCKET_ERROR) {
+			if (m_iResult == SOCKET_ERROR)
+			{
 				std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 				closesocket(ControlSocket);
 				WSACleanup();
 				return FAILURE;
 			}
 
-			if (!sArgument.empty()) {
+			if (!sArgument.empty())
+			{
 				// Receive OK or not OK to continue
 				recv(ControlSocket, msgBuf, msgBufLen, 0);
 
@@ -214,9 +227,11 @@ int FTP_Client::ControlProcess()
 				std::istringstream iss{ msgBuf };
 				int replyCode{ 0 };
 				iss >> replyCode;
-				if (replyCode == FILE_OKAY) {
+				if (replyCode == FILE_OKAY)
+				{
 					// Attempt to accept the server's data connection
-					if (AcceptDataConnection() == SUCCESS) {
+					if (AcceptDataConnection() == SUCCESS)
+					{
 						// Connection established message
 						ZeroMemory(msgBuf, msgBufLen);
 						recv(ControlSocket, msgBuf, msgBufLen, 0);
@@ -242,12 +257,15 @@ int FTP_Client::ControlProcess()
 			closesocket(DataListenSocket);
 		}
 	} break;
-	case COMMAND::STOR: {
+	case COMMAND::STOR:
+	{
 		// Open data transfer listening socket
-		if (EstablishDataConnection() == SUCCESS) {
+		if (EstablishDataConnection() == SUCCESS)
+		{
 			// Send STOR message
 			m_iResult = send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-			if (m_iResult == SOCKET_ERROR) {
+			if (m_iResult == SOCKET_ERROR)
+			{
 				std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 				closesocket(ControlSocket);
 				WSACleanup();
@@ -255,7 +273,8 @@ int FTP_Client::ControlProcess()
 			}
 
 			// Guard against no argument
-			if (!sArgument.empty()) {
+			if (!sArgument.empty())
+			{
 				std::string filename{ sArgument };
 				
 				// Attempt to open file
@@ -267,7 +286,8 @@ int FTP_Client::ControlProcess()
 					// Attempt to accept the server's data connection
 					recv(ControlSocket, msgBuf, msgBufLen, 0);
 					std::cout << "SERVER: " << msgBuf << '\n';
-					if (AcceptDataConnection() == SUCCESS) {
+					if (AcceptDataConnection() == SUCCESS)
+					{
 						// Connection established message
 						ZeroMemory(msgBuf, msgBufLen);
 						recv(ControlSocket, msgBuf, msgBufLen, 0);
@@ -294,10 +314,12 @@ int FTP_Client::ControlProcess()
 			closesocket(DataListenSocket);
 		}
 	} break;
-	case COMMAND::HELP: {
+	case COMMAND::HELP:
+	{
 		// Send Command to Server
 		m_iResult = send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -306,10 +328,12 @@ int FTP_Client::ControlProcess()
 		recv(ControlSocket, msgBuf, msgBufLen, 0);
 		std::cout << "SERVER: " << msgBuf << '\n';
 	} break;
-	case COMMAND::MKD: {
+	case COMMAND::MKD:
+	{
 		// Send command to server
 		m_iResult = send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -318,10 +342,12 @@ int FTP_Client::ControlProcess()
 		recv(ControlSocket, msgBuf, msgBufLen, 0);
 		std::cout << "SERVER: " << msgBuf << '\n';
 	} break;
-	case COMMAND::CWD: {
+	case COMMAND::CWD:
+	{
 		// Send Command to Server
 		m_iResult = send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -334,17 +360,20 @@ int FTP_Client::ControlProcess()
 		std::istringstream iss{ msgBuf };
 		int replyCode{ 0 };
 		iss >> replyCode;
-		if (replyCode == COMMAND_OKAY) {
+		if (replyCode == COMMAND_OKAY)
+		{
 			if(!std::filesystem::exists(sArgument))
 				std::filesystem::create_directory(sArgument);
 			
 			std::filesystem::current_path(sArgument);
 		}
 	} break;
-	case COMMAND::PWD: {
+	case COMMAND::PWD:
+	{
 		// Send Command to Server
 		send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -353,10 +382,12 @@ int FTP_Client::ControlProcess()
 		recv(ControlSocket, msgBuf, msgBufLen, 0);
 		std::cout << "SERVER: " << msgBuf << '\n';
 	} break;
-	case COMMAND::QUIT: {
+	case COMMAND::QUIT:
+	{
 		// Send Command to Server
 		send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -368,10 +399,12 @@ int FTP_Client::ControlProcess()
 		Disconnect();
 		return FAILURE;
 	} break;
-	case COMMAND::LIST: {
+	case COMMAND::LIST:
+	{
 		// Send Command to Server
 		send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -380,10 +413,12 @@ int FTP_Client::ControlProcess()
 		recv(ControlSocket, msgBuf, msgBufLen, 0);
 		std::cout << "SERVER: " << msgBuf << '\n';
 	} break;
-	case COMMAND::INVALID: {
+	case COMMAND::INVALID:
+	{
 		// Send Command to Server
 		send(ControlSocket, client_input.c_str(), client_input.length(), 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -429,7 +464,8 @@ int FTP_Client::EstablishDataConnection()
 	// Resolve the local address and port to be used by the server
 	// The getaddrinfo function is used to determine the values in the sockaddr structure
 	m_iResult = getaddrinfo(NULL, DATA_PORT, &hints, &result);
-	if (m_iResult != 0) { // Error checking: ensure an address was received
+	if (m_iResult != 0) // Error checking: ensure an address was received
+	{
 		std::cerr << "WINSOCK: getaddrinfo() failed with error: " << m_iResult << '\n';
 		WSACleanup();
 		return FAILURE;
@@ -437,7 +473,8 @@ int FTP_Client::EstablishDataConnection()
 
 	// Create a SOCKET for the Client to listen for data connections
 	DataListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (DataListenSocket == INVALID_SOCKET) { // Error checking: ensure the socket is valid.
+	if (DataListenSocket == INVALID_SOCKET) // Error checking: ensure the socket is valid.
+	{
 		std::cerr << "WINSOCK: socket() failed with error: " << WSAGetLastError() << '\n';
 		freeaddrinfo(result);
 		WSACleanup();
@@ -446,7 +483,8 @@ int FTP_Client::EstablishDataConnection()
 
 	// Setup the TCP listening socket
 	m_iResult = bind(DataListenSocket, result->ai_addr, (int)result->ai_addrlen);
-	if (m_iResult == SOCKET_ERROR) { // Error checking
+	if (m_iResult == SOCKET_ERROR) // Error checking
+	{
 		std::cerr << "WINSOCK: bind() failed with error: " << WSAGetLastError() << '\n';
 		freeaddrinfo(result); // Called to free the memory allocated by the getaddrinfo function for this address information
 		closesocket(DataListenSocket);
@@ -458,7 +496,8 @@ int FTP_Client::EstablishDataConnection()
 	// returned by the getaddrinfo function is no longer needed
 	freeaddrinfo(result);
 
-	if (listen(DataListenSocket, SOMAXCONN) == SOCKET_ERROR) {
+	if (listen(DataListenSocket, SOMAXCONN) == SOCKET_ERROR)
+	{
 		std::cerr << "WINSOCK: listen() failed with error: " << WSAGetLastError() << '\n';
 		closesocket(DataListenSocket);
 		WSACleanup();
@@ -472,7 +511,8 @@ int FTP_Client::AcceptDataConnection()
 {
 	// Accept server's data transfer request
 	DataTransferSocket = accept(DataListenSocket, (sockaddr*)&serverAddr, &serverAddrSize);
-	if (DataTransferSocket == INVALID_SOCKET) {
+	if (DataTransferSocket == INVALID_SOCKET)
+	{
 		std::cerr << "WINSOCK: accept() failed with code: " << WSAGetLastError() << '\n';
 		closesocket(DataListenSocket);
 		WSACleanup();
@@ -503,7 +543,8 @@ int FTP_Client::retrFile()
 	for (int remainingData = file_size; remainingData > 0; remainingData -= m_iResult)
 	{
 		m_iResult = recv(DataTransferSocket, xferBuf, xferBufLen, 0);
-		if (m_iResult == SOCKET_ERROR) {
+		if (m_iResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: recv() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}
@@ -535,7 +576,8 @@ int FTP_Client::storFile(std::ifstream& ifs)
 	{
 		ifs.read(xferBuf, xferBufLen);
 		m_iSendResult = send(DataTransferSocket, xferBuf, xferBufLen, 0);
-		if (m_iSendResult == SOCKET_ERROR) {
+		if (m_iSendResult == SOCKET_ERROR)
+		{
 			std::cerr << "WINSOCK: send() failed with error: " << WSAGetLastError() << '\n';
 			return FAILURE;
 		}

@@ -5,7 +5,8 @@
 #include <iostream>
 
 int main(int argc, char** argv)
-try {
+try
+{
 	FTP_Server* server = new FTP_Server();
 
 	server->init();
@@ -16,11 +17,13 @@ try {
 	system("PAUSE");
 	return SUCCESS;
 }
-catch (std::exception& e) {
+catch (std::exception& e)
+{
 	std::cerr << "ERROR: " << e.what() << '\n';
 	return 1;
 }
-catch (...) {
+catch (...)
+{
 	std::cerr << "Unknown error.\n";
 	return 2;
 }

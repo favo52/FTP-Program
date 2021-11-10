@@ -24,11 +24,13 @@ constexpr const char* CONTROL_PORT{ "21" };
 // Use Winsock version 2.2
 constexpr WORD WINSOCK_VER{ MAKEWORD(2, 2) };
 
-enum class COMMAND {
+enum class COMMAND
+{
 	INVALID, RETR, STOR, HELP, QUIT, MKD, PWD, CWD, LIST
 };
 
-static std::map<std::string, COMMAND> stringToCommand{
+static std::map<std::string, COMMAND> stringToCommand
+{
 		{"RETR", COMMAND::RETR },
 		{"STOR", COMMAND::STOR },
 		{"HELP", COMMAND::HELP },
@@ -39,7 +41,8 @@ static std::map<std::string, COMMAND> stringToCommand{
 		{"LIST", COMMAND::LIST }
 };
 
-class FTP_Client {
+class FTP_Client
+{
 private: // Variables
 
 	/*The WSADATA structure contains information
